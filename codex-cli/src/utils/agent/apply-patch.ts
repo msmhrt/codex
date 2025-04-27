@@ -5,6 +5,7 @@ import fs from "fs";
 import path from "path";
 import {
   ADD_FILE_PREFIX,
+  CREATE_FILE_PREFIX,
   DELETE_FILE_PREFIX,
   END_OF_FILE_PREFIX,
   MOVE_FILE_TO_PREFIX,
@@ -178,6 +179,19 @@ class Parser {
         this.patch.actions[path] = this.parse_add_file();
         continue;
       }
+      path = this.read_str(CREATE_FILE_PREFIX);
+      if (path) {
+        if (this.patch.actions[path]) {
+          throw new DiffError(`Create File Error: Duplicate Path: ${path}`);
+        }
+        if (path in this.current_files) {
+          throw new DiffError(
+            `Create File Error: File already exists: ${path}`,
+          );
+        }
+        this.patch.actions[path] = this.parse_add_file();
+        continue;
+      }
       throw new DiffError(`Unknown Line: ${this.lines[this.index]}`);
     }
     if (!this.startswith(PATCH_SUFFIX.trim())) {
@@ -197,6 +211,7 @@ class Parser {
         UPDATE_FILE_PREFIX,
         DELETE_FILE_PREFIX,
         ADD_FILE_PREFIX,
+        CREATE_FILE_PREFIX,
         END_OF_FILE_PREFIX,
       ])
     ) {
@@ -307,15 +322,21 @@ class Parser {
 
   private parse_add_file(): PatchAction {
     const lines: Array<string> = [];
+    // skip new-file hunk header (e.g. "@@ -0,0 +1@@" or "+1,NN@@")
+    const NEW_FILE_HUNK = /^@@\s+-0,0\s+\+1(?:,[1-9]\d*)?\s+@@/;
     while (
       !this.is_done([
         PATCH_SUFFIX,
         UPDATE_FILE_PREFIX,
         DELETE_FILE_PREFIX,
         ADD_FILE_PREFIX,
+        CREATE_FILE_PREFIX,
       ])
     ) {
       const s = this.read_str();
+      if (NEW_FILE_HUNK.test(s)) {
+        continue;
+      }
       if (!s.startsWith(HUNK_ADD_LINE_PREFIX)) {
         throw new DiffError(`Invalid Add File Line: ${s}`);
       }
@@ -586,6 +607,9 @@ export function identify_files_added(text: string): Array<string> {
   for (const line of lines) {
     if (line.startsWith(ADD_FILE_PREFIX)) {
       result.add(line.slice(ADD_FILE_PREFIX.length));
+    }
+    if (line.startsWith(CREATE_FILE_PREFIX)) {
+      result.add(line.slice(CREATE_FILE_PREFIX.length));
     }
   }
   return [...result];

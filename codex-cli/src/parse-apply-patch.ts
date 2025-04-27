@@ -25,6 +25,7 @@ export type ApplyPatchOp =
 export const PATCH_PREFIX = "*** Begin Patch\n";
 export const PATCH_SUFFIX = "\n*** End Patch";
 export const ADD_FILE_PREFIX = "*** Add File: ";
+export const CREATE_FILE_PREFIX = "*** Create File: ";
 export const DELETE_FILE_PREFIX = "*** Delete File: ";
 export const UPDATE_FILE_PREFIX = "*** Update File: ";
 export const MOVE_FILE_TO_PREFIX = "*** Move to: ";
@@ -59,6 +60,13 @@ export function parseApplyPatch(patch: string): Array<ApplyPatchOp> | null {
       ops.push({
         type: "create",
         path: line.slice(ADD_FILE_PREFIX.length).trim(),
+        content: "",
+      });
+      continue;
+    } else if (line.startsWith(CREATE_FILE_PREFIX)) {
+      ops.push({
+        type: "create",
+        path: line.slice(CREATE_FILE_PREFIX.length).trim(),
         content: "",
       });
       continue;
