@@ -13,6 +13,9 @@ patchedDependencies:
   marked-terminal@7.3.0:
     hash: 536fe9685e91d559cf29a033191aa39da45729949e9d1c69989255091c8618fb
     path: patches/marked-terminal@7.3.0.patch
+  openai:
+    hash: 94542cfda470d2bf9fb22fb3dd399146c6f6851356316bf6b326b1b1fd335b13
+    path: patches/openai.patch
 
 importers:
 
@@ -83,7 +86,7 @@ importers:
         version: 10.1.1
       openai:
         specifier: ^4.95.1
-        version: 4.95.1(ws@8.18.1)(zod@3.24.3)
+        version: 4.95.1(patch_hash=94542cfda470d2bf9fb22fb3dd399146c6f6851356316bf6b326b1b1fd335b13)(ws@8.18.1)(zod@3.24.3)
       package-manager-detector:
         specifier: ^1.2.0
         version: 1.2.0
@@ -4617,7 +4620,7 @@ snapshots:
       is-inside-container: 1.0.0
       is-wsl: 3.1.0
 
-  openai@4.95.1(ws@8.18.1)(zod@3.24.3):
+  openai@4.95.1(patch_hash=94542cfda470d2bf9fb22fb3dd399146c6f6851356316bf6b326b1b1fd335b13)(ws@8.18.1)(zod@3.24.3):
     dependencies:
       '@types/node': 18.19.86
       '@types/node-fetch': 2.6.12

@@ -1,0 +1,41 @@
+diff --git a/error.js b/error.js
+index d08cb5c38e1c978f778fb52d08833b356ed58342..9dd0dc74e010f71ff7831420b432ab14335167c6 100644
+--- a/error.js
++++ b/error.js
+@@ -40,7 +40,14 @@ class APIError extends OpenAIError {
+         if (!status || !headers) {
+             return new APIConnectionError({ message, cause: (0, core_1.castToError)(errorResponse) });
+         }
+-        const error = errorResponse?.['error'];
++        const json = errorResponse;
++        let error;
++        // Some OpenAI-compatible APIs may return errors wrapped in an array like [{ error: { … } }], so check for that format.
++	if (Array.isArray(json) && json.length > 0 && json[0]?.error != null) {
++	    error = json[0].error;
++	} else {
++	    error = json?.['error'];
++	}
+         if (status === 400) {
+             return new BadRequestError(status, error, message, headers);
+         }
+diff --git a/error.mjs b/error.mjs
+index 7d19f5578040afa004bc887aab1725e8703d2bac..089ee95a67087dcb6e997f6369e0373b093aa10f 100644
+--- a/error.mjs
++++ b/error.mjs
+@@ -36,7 +36,15 @@ export class APIError extends OpenAIError {
+         if (!status || !headers) {
+             return new APIConnectionError({ message, cause: castToError(errorResponse) });
+         }
+-        const error = errorResponse?.['error'];
++        const json = errorResponse;
++        let error;
++        // Some OpenAI-compatible APIs may return errors wrapped in an array like [{ error: { … } }], so check for that format.
++	if (Array.isArray(json) && json.length > 0 && json[0]?.error != null) {
++	    error = json[0].error;
++	} else {
++	    error = json?.['error'];
++	}
++
+         if (status === 400) {
+             return new BadRequestError(status, error, message, headers);
+         }

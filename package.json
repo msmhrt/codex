@@ -31,7 +31,8 @@
   },
   "pnpm": {
     "patchedDependencies": {
-      "marked-terminal@7.3.0": "patches/marked-terminal@7.3.0.patch"
+      "marked-terminal@7.3.0": "patches/marked-terminal@7.3.0.patch",
+      "openai": "patches/openai.patch"
     }
   },
   "engines": {
