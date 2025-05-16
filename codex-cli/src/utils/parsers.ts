@@ -22,8 +22,10 @@ export function parseToolCallOutput(toolCallOutput: string): {
       metadata,
     };
   } catch (err) {
+    // Include the parse error message in the output for easier debugging
+    const errorMessage = err instanceof Error ? err.message : String(err);
     return {
-      output: `Failed to parse JSON result`,
+      output: `Failed to parse JSON result: ${errorMessage}`,
       metadata: {
         exit_code: 1,
         duration_seconds: 0,
