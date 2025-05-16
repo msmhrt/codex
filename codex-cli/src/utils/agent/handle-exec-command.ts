@@ -308,15 +308,15 @@ async function getSandbox(runInSandbox: boolean): Promise<SandboxType> {
           "Sandbox was mandated, but 'sandbox-exec' was not found in PATH!",
         );
       }
+    } else if (CODEX_UNSAFE_ALLOW_NO_SANDBOX) {
+      // Allow running without a sandbox if the user has explicitly marked the
+      // environment as already being sufficiently locked-down.
+      return SandboxType.NONE;
     } else if (process.platform === "linux") {
       // TODO: Need to verify that the Landlock sandbox is working. For example,
       // using Landlock in a Linux Docker container from a macOS host may not
       // work.
       return SandboxType.LINUX_LANDLOCK;
-    } else if (CODEX_UNSAFE_ALLOW_NO_SANDBOX) {
-      // Allow running without a sandbox if the user has explicitly marked the
-      // environment as already being sufficiently locked-down.
-      return SandboxType.NONE;
     }
 
     // For all else, we hard fail if the user has requested a sandbox and none is available.
