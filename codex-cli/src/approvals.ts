@@ -9,7 +9,7 @@ import { parse } from "shell-quote";
 
 export type SafetyAssessment = {
   /**
-   * If set, this approval is for an apply_patch call and these are the
+   * If set, this approval is for an aipatch call and these are the
    * arguments.
    */
   applyPatch?: ApplyPatchCommand;
@@ -76,12 +76,12 @@ export function canAutoApprove(
   writableRoots: ReadonlyArray<string>,
   env: NodeJS.ProcessEnv = process.env,
 ): SafetyAssessment {
-  if (command[0] === "apply_patch") {
+  if (command[0] === "aipatch") {
     return command.length === 2 && typeof command[1] === "string"
       ? canAutoApproveApplyPatch(command[1], workdir, writableRoots, policy)
       : {
           type: "reject",
-          reason: "Invalid apply_patch command",
+          reason: "Invalid aipatch command",
         };
   }
 
@@ -195,7 +195,7 @@ function canAutoApproveApplyPatch(
   ) {
     return {
       type: "auto-approve",
-      reason: "apply_patch command is constrained to writable paths",
+      reason: "aipatch command is constrained to writable paths",
       group: "Editing",
       runInSandbox: false,
       applyPatch: { patch: applyPatchArg },
@@ -302,12 +302,12 @@ function pathContains(parent: string, child: string): boolean {
 }
 
 /**
- * `bashArg` might be something like "apply_patch << 'EOF' *** Begin...".
+ * `bashArg` might be something like "aipatch << 'EOF' *** Begin...".
  * If this function returns a string, then it is the content the arg to
- * apply_patch with the heredoc removed.
+ * aipatch with the heredoc removed.
  */
 function tryParseApplyPatch(bashArg: string): string | null {
-  const prefix = "apply_patch";
+  const prefix = "aipatch";
   if (!bashArg.startsWith(prefix)) {
     return null;
   }

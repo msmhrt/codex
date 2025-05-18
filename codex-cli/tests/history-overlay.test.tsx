@@ -105,7 +105,7 @@ describe("HistoryOverlay", () => {
       const items = [
         createFunctionCall("shell", {
           cmd: [
-            "apply_patch",
+            "aipatch",
             "*** Begin Patch\n--- a/src/file1.txt\n+++ b/src/file1.txt\n@@ -1,5 +1,5 @@\n-const x = 1;\n+const x = 2;\n",
           ],
         }),
@@ -116,7 +116,7 @@ describe("HistoryOverlay", () => {
 
       // Verify patch is displayed in command mode
       let frame = lastFrame();
-      expect(frame).toContain("apply_patch");
+      expect(frame).toContain("aipatch");
       expect(frame).toContain("src/file1.txt");
 
       // Verify file is extracted in file mode
@@ -210,7 +210,7 @@ describe("HistoryOverlay", () => {
       const items = [
         createFunctionCall("shell", {
           cmd: [
-            "apply_patch",
+            "aipatch",
             "*** Begin Patch\n--- a/src/file1.txt\n+++ b/src/file1.txt\n@@ -1,5 +1,5 @@\n-const x = 1;\n+const x = 2;\n",
           ],
         }),

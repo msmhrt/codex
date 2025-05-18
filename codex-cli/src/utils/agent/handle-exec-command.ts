@@ -18,7 +18,7 @@ import fs from "fs/promises";
 // Session‑level cache of commands that the user has chosen to always approve.
 //
 // The values are derived via `deriveCommandKey()` which intentionally ignores
-// volatile arguments (for example the patch text passed to `apply_patch`).
+// volatile arguments (for example the patch text passed to `aipatch`).
 // Storing *generalised* keys means that once a user selects "always approve"
 // for a given class of command we will genuinely stop prompting them for
 // subsequent, equivalent invocations during the same CLI session.
@@ -44,8 +44,8 @@ function deriveCommandKey(cmd: Array<string>): string {
     /* …ignore the rest… */
   ] = cmd;
 
-  if (coreInvocation?.startsWith("apply_patch")) {
-    return "apply_patch";
+  if (coreInvocation?.startsWith("aipatch")) {
+    return "aipatch";
   }
 
   if (maybeShell === "bash" && maybeFlag === "-lc") {
@@ -230,7 +230,7 @@ async function execCommand(
   }
 
   if (applyPatchCommand != null) {
-    log("EXEC running apply_patch command");
+    log("EXEC running aipatch command");
   } else if (isLoggingEnabled()) {
     const { cmd, timeoutInMillis } = execInput;
     // Seconds are a bit easier to read in log messages and most timeouts

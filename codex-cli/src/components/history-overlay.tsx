@@ -106,6 +106,10 @@ function formatHistoryForDisplay(items: Array<ResponseItem>): {
   const filesSet = new Set<string>();
 
   for (const item of items) {
+    // Skip null or undefined items
+    if (item == null) {
+      continue;
+    }
     const userPrompt = processUserMessage(item);
     if (userPrompt) {
       commands.push(userPrompt);
@@ -211,8 +215,8 @@ function processCommandArray(
     }
   }
 
-  // Special‑case apply_patch so we can extract the list of modified files
-  if (cmdArray[0] === "apply_patch" || cmdArray.includes("apply_patch")) {
+  // Special‑case aipatch so we can extract the list of modified files
+  if (cmdArray[0] === "aipatch" || cmdArray.includes("aipatch")) {
     const patchTextMaybe = cmdArray.find((s) => s.includes("*** Begin Patch"));
     if (typeof patchTextMaybe === "string") {
       const lines = patchTextMaybe.split("\n");

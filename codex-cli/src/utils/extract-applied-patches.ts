@@ -1,7 +1,7 @@
 import type { ResponseItem } from "openai/resources/responses/responses.mjs";
 
 /**
- * Extracts the patch texts of all `apply_patch` tool calls from the given
+ * Extracts the patch texts of all `aipatch` tool calls from the given
  * message history. Returns an empty string when none are found.
  */
 export function extractAppliedPatches(items: Array<ResponseItem>): string {
@@ -17,7 +17,7 @@ export function extractAppliedPatches(items: Array<ResponseItem>): string {
       arguments: unknown;
     };
 
-    if (toolName !== "apply_patch" || typeof argsString !== "string") {
+    if (toolName !== "aipatch" || typeof argsString !== "string") {
       continue;
     }
 

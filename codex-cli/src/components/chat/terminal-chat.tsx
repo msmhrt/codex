@@ -322,7 +322,7 @@ export default function TerminalChat({
 
   // Whenever loading starts/stops, reset or start a timer — but pause the
   // timer while a confirmation overlay is displayed so we don't trigger a
-  // re‑render every second during apply_patch reviews.
+  // re‑render every second during aipatch reviews.
   useEffect(() => {
     let handle: ReturnType<typeof setInterval> | null = null;
     // Only tick the "thinking…" timer when the agent is actually processing

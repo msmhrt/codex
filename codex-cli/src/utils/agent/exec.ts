@@ -84,7 +84,7 @@ export function execApplyPatch(
   workdir: string | undefined = undefined,
 ): ExecResult {
   // This find/replace is required from some models like 4.1 where the patch
-  // text is wrapped in quotes that breaks the apply_patch command.
+  // text is wrapped in quotes that breaks the aipatch command.
   let applyPatchInput = patchText
     .replace(/('|")?<<('|")EOF('|")/, "")
     .replace(/\*\*\* End Patch\nEOF('|")?/, "*** End Patch")
@@ -104,7 +104,7 @@ export function execApplyPatch(
         const resolvedPath = resolvePathAgainstWorkdir(p, workdir);
 
         // Ensure the parent directory exists before writing the file. This
-        // mirrors the behaviour of the standalone apply_patch CLI (see
+        // mirrors the behaviour of the standalone aipatch CLI (see
         // write_file() in apply-patch.ts) and prevents errors when adding a
         // new file in a not‑yet‑created sub‑directory.
         const dir = path.dirname(resolvedPath);

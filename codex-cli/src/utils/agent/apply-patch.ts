@@ -364,7 +364,7 @@ function find_context_core(
    * for non-whitespace characters.  That breaks when the file on disk contains
    * visually identical but different Unicode code-points (e.g. “EN DASH” vs
    * ASCII "-"), because models almost always emit the ASCII variant.  To make
-   * apply_patch resilient we canonicalise a handful of common punctuation
+   * aipatch resilient we canonicalise a handful of common punctuation
    * look-alikes before doing comparisons.
    *
    * We purposefully keep the mapping *small* – only characters that routinely
@@ -796,10 +796,10 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 }
 
 export const applyPatchToolInstructions = `
-To edit files, ALWAYS use the \`shell\` tool with \`apply_patch\` CLI.  \`apply_patch\` effectively allows you to execute a diff/patch against a file, but the format of the diff specification is unique to this task, so pay careful attention to these instructions. To use the \`apply_patch\` CLI, you should call the shell tool with the following structure:
+To edit files, ALWAYS use the \`shell\` tool with \`aipatch\` CLI.  \`aipatch\` effectively allows you to execute a diff/patch against a file, but the format of the diff specification is unique to this task, so pay careful attention to these instructions. To use the \`aipatch\` CLI, you should call the shell tool with the following structure:
 
 \`\`\`bash
-{"cmd": ["apply_patch", "<<'EOF'\\n*** Begin Patch\\n[YOUR_PATCH]\\n*** End Patch\\nEOF\\n"], "workdir": "..."}
+{"cmd": ["aipatch", "<<'EOF'\\n*** Begin Patch\\n[YOUR_PATCH]\\n*** End Patch\\nEOF\\n"], "workdir": "..."}
 \`\`\`
 
 Where [YOUR_PATCH] is the actual content of your patch, specified in the following V4A diff format.
@@ -832,8 +832,8 @@ For instructions on [context_before] and [context_after]:
 Note, then, that we do not use line numbers in this diff format, as the context is enough to uniquely identify code. An example of a message that you might pass as "input" to this function, in order to apply a patch, is shown below.
 
 \`\`\`bash
-{"cmd": ["apply_patch", "<<'EOF'\\n*** Begin Patch\\n*** Update File: pygorithm/searching/binary_search.py\\n@@ class BaseClass\\n@@     def search():\\n-        pass\\n+        raise NotImplementedError()\\n@@ class Subclass\\n@@     def search():\\n-        pass\\n+        raise NotImplementedError()\\n*** End Patch\\nEOF\\n"], "workdir": "..."}
+{"cmd": ["aipatch", "<<'EOF'\\n*** Begin Patch\\n*** Update File: pygorithm/searching/binary_search.py\\n@@ class BaseClass\\n@@     def search():\\n-        pass\\n+        raise NotImplementedError()\\n@@ class Subclass\\n@@     def search():\\n-        pass\\n+        raise NotImplementedError()\\n*** End Patch\\nEOF\\n"], "workdir": "..."}
 \`\`\`
 
-File references can only be relative, NEVER ABSOLUTE. After the apply_patch command is run, it will always say "Done!", regardless of whether the patch was successfully applied or not. However, you can determine if there are issue and errors by looking at any warnings or logging lines printed BEFORE the "Done!" is output.
+File references can only be relative, NEVER ABSOLUTE. After the aipatch command is run, it will always say "Done!", regardless of whether the patch was successfully applied or not. However, you can determine if there are issue and errors by looking at any warnings or logging lines printed BEFORE the "Done!" is output.
 `;

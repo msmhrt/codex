@@ -44,7 +44,7 @@ export function TerminalChatCommandReview({
 
   // -------------------------------------------------------------------------
   // Determine whether the "always approve" option should be displayed.  We
-  // only hide it for the special `apply_patch` command since approving those
+  // only hide it for the special `aipatch` command since approving those
   // permanently would bypass the user's review of future file modifications.
   // The information is embedded in the `confirmationPrompt` React element –
   // we inspect the `commandForDisplay` prop exposed by
@@ -63,7 +63,7 @@ export function TerminalChatCommandReview({
       // Grab the first token of the first line – that corresponds to the base
       // command even when the string contains embedded newlines (e.g. diffs).
       const baseCmd = command.split("\n")[0]?.trim().split(/\s+/)[0] ?? "";
-      return baseCmd !== "apply_patch";
+      return baseCmd !== "aipatch";
     }
     // Default to showing the option when we cannot reliably detect the base
     // command.
