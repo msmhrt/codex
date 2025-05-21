@@ -338,7 +338,9 @@ class Parser {
         continue;
       }
       if (!s.startsWith(HUNK_ADD_LINE_PREFIX)) {
-        throw new DiffError(`Invalid Add File Line: ${s}`);
+        throw new DiffError(
+          `Invalid add-file content line: expected '+' at the start, but got: ${s}`
+        );
       }
       lines.push(s.slice(1));
     }
