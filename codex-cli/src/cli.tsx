@@ -36,9 +36,10 @@ import {
   loadConfig,
   PRETTY_PRINT,
   INSTRUCTIONS_FILEPATH,
+  getApiKey as configGetApiKey,
 } from "./utils/config";
 import {
-  getApiKey as fetchApiKey,
+  getApiKey as fetchOpenAIApiKey,
   maybeRedeemCredits,
 } from "./utils/get-api-key";
 import { createInputItem } from "./utils/input-utils";
@@ -328,7 +329,14 @@ try {
 }
 
 if (cli.flags.login) {
-  apiKey = await fetchApiKey(client.issuer, client.client_id);
+  if (provider.toLowerCase() === "openai") {
+    apiKey = await fetchOpenAIApiKey(client.issuer, client.client_id);
+  } else {
+    const key = configGetApiKey(provider);
+    if (key) {
+      apiKey = key;
+    }
+  }
   try {
     const home = os.homedir();
     const authDir = path.join(home, ".codex");
@@ -341,24 +349,33 @@ if (cli.flags.login) {
     /* ignore */
   }
 } else if (!apiKey) {
-  apiKey = await fetchApiKey(client.issuer, client.client_id);
+  if (provider.toLowerCase() === "openai") {
+    apiKey = await fetchOpenAIApiKey(client.issuer, client.client_id);
+  } else {
+    const key = configGetApiKey(provider);
+    if (key) {
+      apiKey = key;
+    }
+  }
 }
 // Ensure the API key is available as an environment variable for legacy code
 process.env["OPENAI_API_KEY"] = apiKey;
 
 if (cli.flags.free) {
-  // eslint-disable-next-line no-console
-  console.log(`${chalk.bold("codex --free")} attempting to redeem credits...`);
-  if (!savedTokens?.refresh_token) {
-    apiKey = await fetchApiKey(client.issuer, client.client_id, true);
-    // fetchApiKey includes credit redemption as the end of the flow
-  } else {
-    await maybeRedeemCredits(
-      client.issuer,
-      client.client_id,
-      savedTokens.refresh_token,
-      savedTokens.id_token,
-    );
+  if (provider.toLowerCase() === "openai") {
+    // eslint-disable-next-line no-console
+    console.log(`${chalk.bold("codex --free")} attempting to redeem credits...`);
+    if (!savedTokens?.refresh_token) {
+      apiKey = await fetchOpenAIApiKey(client.issuer, client.client_id, true);
+      // fetchOpenAIApiKey includes credit redemption as the end of the flow
+    } else {
+      await maybeRedeemCredits(
+        client.issuer,
+        client.client_id,
+        savedTokens.refresh_token,
+        savedTokens.id_token,
+      );
+    }
   }
 }
 
