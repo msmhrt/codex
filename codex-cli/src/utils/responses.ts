@@ -493,8 +493,7 @@ async function* streamResponses(
     }
     if (
       !isToolCall &&
-      (("tool_calls" in choice.delta && choice.delta.tool_calls) ||
-        choice.finish_reason === "tool_calls")
+      (choice.delta?.tool_calls || choice.finish_reason === "tool_calls")
     ) {
       isToolCall = true;
     }
@@ -592,15 +591,16 @@ async function* streamResponses(
         };
         textContentAdded = true;
       }
-      if (choice.delta.content?.length) {
+      const textDelta = choice.delta?.content;
+      if (textDelta?.length) {
         yield {
           type: "response.output_text.delta",
           item_id: outputItemId,
           output_index: 0,
           content_index: 0,
-          delta: choice.delta.content,
+          delta: textDelta,
         };
-        textContent += choice.delta.content;
+        textContent += textDelta;
       }
       if (choice.finish_reason) {
         yield {
