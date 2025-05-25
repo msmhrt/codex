@@ -31,6 +31,7 @@ export const UPDATE_FILE_PREFIX = "*** Update File: ";
 export const MOVE_FILE_TO_PREFIX = "*** Move to: ";
 export const END_OF_FILE_PREFIX = "*** End of File";
 export const HUNK_ADD_LINE_PREFIX = "+";
+export const FROM_NULL_MARKER = /^---\s+\/dev\/null\s*$/;
 
 /**
  * @returns null when the patch is invalid

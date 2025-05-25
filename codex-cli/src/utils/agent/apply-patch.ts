@@ -13,6 +13,7 @@ import {
   UPDATE_FILE_PREFIX,
   HUNK_ADD_LINE_PREFIX,
   PATCH_PREFIX,
+  FROM_NULL_MARKER,
 } from "src/parse-apply-patch";
 
 // -----------------------------------------------------------------------------
@@ -148,11 +149,16 @@ class Parser {
           throw new DiffError(`Update File Error: Duplicate Path: ${path}`);
         }
         const moveTo = this.read_str(MOVE_FILE_TO_PREFIX);
-        if (!(path in this.current_files)) {
-          throw new DiffError(`Update File Error: Missing File: ${path}`);
+        const fileExists = path in this.current_files;
+        if (!fileExists) {
+          const nextLine = this.lines[this.index] ?? "";
+          if (!FROM_NULL_MARKER.test(nextLine.trim())) {
+            throw new DiffError(`Update File Error: Missing File: ${path}`);
+          }
         }
-        const text = this.current_files[path];
-        const action = this.parse_update_file(text ?? "");
+        const text = fileExists ? this.current_files[path]! : "";
+        this.current_files[path] = text;
+        const action = this.parse_update_file(text);
         action.move_path = moveTo || undefined;
         this.patch.actions[path] = action;
         continue;
@@ -204,6 +210,7 @@ class Parser {
     const action: PatchAction = { type: ActionType.UPDATE, chunks: [] };
     const fileLines = text.split("\n");
     let index = 0;
+    let headerDone = false;
 
     while (
       !this.is_done([
@@ -215,6 +222,18 @@ class Parser {
         END_OF_FILE_PREFIX,
       ])
     ) {
+      if (!headerDone) {
+        let maybeMarker = this.read_str("--- ");
+        if (maybeMarker) {
+          maybeMarker = this.read_str("+++ ");
+          if (!maybeMarker) {
+            throw new DiffError(
+              `Invalid add-file header line: expected '+++ ' at the start, but got: ${maybeMarker}`,
+            );
+          }
+        }
+        headerDone = true;
+      }
       const defStr = this.read_str("@@ ");
       let sectionStr = "";
       if (!defStr && this.lines[this.index] === "@@") {
@@ -324,6 +343,7 @@ class Parser {
     const lines: Array<string> = [];
     // skip new-file hunk header (e.g. "@@ -0,0 +1@@" or "+1,NN@@")
     const NEW_FILE_HUNK = /^@@\s+-0,0\s+\+1(?:,[1-9]\d*)?\s+@@/;
+    let headerDone = false;
     while (
       !this.is_done([
         PATCH_SUFFIX,
@@ -333,16 +353,28 @@ class Parser {
         CREATE_FILE_PREFIX,
       ])
     ) {
-      const s = this.read_str();
-      if (NEW_FILE_HUNK.test(s)) {
-        continue;
+      let s = this.read_str();
+      if (!headerDone) {
+        if (FROM_NULL_MARKER.test(s)) {
+          const maybeMarker = this.read_str();
+          if (!maybeMarker.startsWith("+++ ")) {
+            throw new DiffError(
+              `Invalid add-file header line: expected '+++ ' at the start, but got: ${maybeMarker}`,
+            );
+          }
+          s = this.read_str();
+        }
+        if (NEW_FILE_HUNK.test(s)) {
+          s = this.read_str();
+        }
+        headerDone = true;
       }
       if (!s.startsWith(HUNK_ADD_LINE_PREFIX)) {
         throw new DiffError(
-          `Invalid add-file content line: expected '+' at the start, but got: ${s}`
+          `Invalid add-file content line: expected '${HUNK_ADD_LINE_PREFIX}' at the start, but got: "${s}"`,
         );
       }
-      lines.push(s.slice(1));
+      lines.push(s.slice(HUNK_ADD_LINE_PREFIX.length));
     }
     return {
       type: ActionType.ADD,
