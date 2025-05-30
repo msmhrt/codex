@@ -339,11 +339,33 @@ class Parser {
     return action;
   }
 
+  /**
+   * Skip add-file header section and return the hunk start index.
+   * Advances this.index to the first line of file content.
+   */
+  private skipAddFileHeader(): number {
+    const NEW_FILE_HUNK = /^@@\s+-0,0\s+\+1(?:,[1-9]\d*)?\s+@@/;
+    const startIdx = this.index;
+    let s = this.read_str();
+    if (FROM_NULL_MARKER.test(s)) {
+      const maybeMarker = this.read_str();
+      if (!maybeMarker.startsWith("+++ ")) {
+        throw new DiffError(
+          `Invalid add-file header line: expected '+++ ' at the start, but got: ${maybeMarker}`,
+        );
+      }
+      s = this.read_str();
+    }
+    if (NEW_FILE_HUNK.test(s)) {
+      s = this.read_str();
+    }
+    return this.index;
+  }
+
   private parse_add_file(): PatchAction {
     const lines: Array<string> = [];
-    // skip new-file hunk header (e.g. "@@ -0,0 +1@@" or "+1,NN@@")
-    const NEW_FILE_HUNK = /^@@\s+-0,0\s+\+1(?:,[1-9]\d*)?\s+@@/;
-    let headerDone = false;
+    const hunkStart = this.skipAddFileHeader();
+    const prefix = this.detectAddFilePrefix();
     while (
       !this.is_done([
         PATCH_SUFFIX,
@@ -353,34 +375,40 @@ class Parser {
         CREATE_FILE_PREFIX,
       ])
     ) {
-      let s = this.read_str();
-      if (!headerDone) {
-        if (FROM_NULL_MARKER.test(s)) {
-          const maybeMarker = this.read_str();
-          if (!maybeMarker.startsWith("+++ ")) {
-            throw new DiffError(
-              `Invalid add-file header line: expected '+++ ' at the start, but got: ${maybeMarker}`,
-            );
+      const s = this.read_str();
+      if (prefix) {
+        if (!s.startsWith(prefix)) {
+          if (s === "" && this.index === this.lines.length - 1) {
+            continue;
           }
-          s = this.read_str();
+          throw new DiffError(
+            `Invalid add-file content line at line ${this.index + 1 - hunkStart} expected '${prefix}' at the start, but got: "${s}"`,
+          );
         }
-        if (NEW_FILE_HUNK.test(s)) {
-          s = this.read_str();
-        }
-        headerDone = true;
+        lines.push(s.slice(prefix.length));
+      } else {
+        lines.push(s);
       }
-      if (!s.startsWith(HUNK_ADD_LINE_PREFIX)) {
-        throw new DiffError(
-          `Invalid add-file content line: expected '${HUNK_ADD_LINE_PREFIX}' at the start, but got: "${s}"`,
-        );
-      }
-      lines.push(s.slice(HUNK_ADD_LINE_PREFIX.length));
     }
     return {
       type: ActionType.ADD,
       new_file: lines.join("\n"),
       chunks: [],
     };
+  }
+
+  /**
+   * Look ahead up to 10 lines to see if any start with '+'.
+   * Returns HUNK_ADD_LINE_PREFIX if found, otherwise ''.
+   */
+  private detectAddFilePrefix(): string {
+    const startIdx = this.index;
+    for (let i = 0; i < 10 && startIdx + i < this.lines.length; i++) {
+      if (this.lines[startIdx + i]!.startsWith(HUNK_ADD_LINE_PREFIX)) {
+        return HUNK_ADD_LINE_PREFIX;
+      }
+    }
+    return "";
   }
 }
 
@@ -624,9 +652,16 @@ export function text_to_patch(
 export function identify_files_needed(text: string): Array<string> {
   const lines = text.trim().split("\n");
   const result = new Set<string>();
-  for (const line of lines) {
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    // For update entries, only include the path when the next line is not FROM_NULL_MARKER
+    // ('--- /dev/null'), because that marker indicates the file is being created rather than updated.
     if (line.startsWith(UPDATE_FILE_PREFIX)) {
-      result.add(line.slice(UPDATE_FILE_PREFIX.length));
+      const filePath = line.slice(UPDATE_FILE_PREFIX.length);
+      const nextLine = lines[i + 1] ?? "";
+      if (!FROM_NULL_MARKER.test(nextLine.trim())) {
+        result.add(filePath);
+      }
     }
     if (line.startsWith(DELETE_FILE_PREFIX)) {
       result.add(line.slice(DELETE_FILE_PREFIX.length));
